@@ -1,1 +1,2 @@
 # os-lab-projects
+So, yeah, here we just make random changes to the xv6 kernel, granting our TAs their out-of-nowhere requests; supposedly, these things have a learning intention. We ain't doing much learning out of this bizzare ball of yarn, we're telling ya.
