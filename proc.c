@@ -57,6 +57,18 @@ mycpu(void)
 
 // Disable interrupts so that we are not rescheduled
 // while reading proc from the cpu structure
+
+int
+sys_uptime_fake(void)
+{
+  uint xticks;
+
+  acquire(&tickslock);
+  xticks = ticks;
+  release(&tickslock);
+  return xticks;
+}
+
 struct proc*
 myproc(void) {
   struct cpu *c;
@@ -91,6 +103,15 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
+  p->q_level = 2;
+  p->num_tickets = 10;
+  p->age = 0;
+  p->arrival_time = sys_uptime_fake();
+  p->executed_cycle = 0;
+  p->executed_cycle_ratio = 0;
+  p->arrival_ratio = 0;
+  p->priority_ratio = 0;
+
   memset(p->syscall_cnt, 0, sizeof p->syscall_cnt);
   release(&ptable.lock);
 
@@ -426,6 +447,7 @@ scheduler(void)
 
   int total_tickets = 0;
   unsigned int seed = 1;
+
   for(;;){
     // Enable interrupts on this processor.
     sti();
@@ -442,14 +464,15 @@ scheduler(void)
         proc_count[p->q_level]++;
       }
     }
+    //cprintf("%d %d %d\n", proc_count[1], proc_count[2], proc_count[3]);
 
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-
     // Round Robin algorithm to fekr
     if(proc_count[1])
     {  
+      //cprintf("aaaaaaaa\n");
       for(p = ptable.proc; p < &ptable.proc[NPROC] ; p++){
         if(p->state != RUNNABLE || p->q_level != 1)
           continue;
@@ -475,6 +498,7 @@ scheduler(void)
         // It should have changed its p->state before coming back.
         c->proc = 0;
       }
+      release(&ptable.lock);
       continue;
     }
 
@@ -515,6 +539,7 @@ scheduler(void)
         c->proc = 0;
         break;
       }
+      release(&ptable.lock);
       continue;
     }
 
@@ -557,6 +582,7 @@ scheduler(void)
 
         // Process is done running for now.
         // It should have changed its p->state before coming back.
+        run_proc->executed_cycle += 0.1;
         c->proc = 0;
         break;
       }
