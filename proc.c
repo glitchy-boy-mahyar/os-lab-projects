@@ -11,7 +11,7 @@ struct {
   struct spinlock lock;
   struct proc proc[NPROC];
   int trace, trace_pid;
-} ptable;
+} ptable1, ptable2, ptable3;
 
 static struct proc *initproc;
 
@@ -389,37 +389,159 @@ wait(void)
 //  - swtch to start running that process
 //  - eventually that process transfers control
 //      via swtch back to the scheduler.
+/* This algorithm is mentioned in the ISO C standard, here extended
+   for 32 bits.  */
+int
+rand_r (unsigned int *seed)
+{
+  unsigned int next = *seed;
+  int result;
+
+  next *= 1103515245;
+  next += 12345;
+  result = (unsigned int) (next / 65536) % 2048;
+
+  next *= 1103515245;
+  next += 12345;
+  result <<= 10;
+  result ^= (unsigned int) (next / 65536) % 1024;
+
+  next *= 1103515245;
+  next += 12345;
+  result <<= 10;
+  result ^= (unsigned int) (next / 65536) % 1024;
+
+  *seed = next;
+
+  return result;
+}
+
 void
 scheduler(void)
 {
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;
+
+  int ptable1_runnable_count = 0;
+  int ptable2_runnable_count = 0;
+  int ptable3_runnable_count = 0;
+  int total_tickets = 0;
+  unsigned int* seed;
+  *seed = 1;
+  //counting ptable1 runnable processes
   
   for(;;){
     // Enable interrupts on this processor.
     sti();
+    for (p = ptable1.proc; p < &ptable1.proc[NPROC]; p++)
+    {
+      if(p->state == RUNNABLE)
+      {
+        ptable1_runnable_count++;
+      }
+    }
+    //counting ptable2 runnable processes
+    if(!ptable1_runnable_count)
+    { 
+      for (p = ptable2.proc; p < &ptable2.proc[NPROC]; p++)
+      {
+        if(p->state == RUNNABLE)
+        {
+          total_tickets += p->num_tickets;
+          ptable2_runnable_count++;
+        }
+      }
+    }
+    //counting ptable3 runnable processes
+    if(!ptable1_runnable_count && !ptable2_runnable_count)
+    { 
+      for (p = ptable3.proc; p < &ptable3.proc[NPROC]; p++)
+      {
+        if(p->state == RUNNABLE)
+        {
+          ptable3_runnable_count++;
+        }
+      }
+    }
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
-        continue;
 
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
-      c->proc = p;
-      switchuvm(p);
-      p->state = RUNNING;
+    // Round Robin algorithm
+    if(ptable1_runnable_count)
+    {  
+      for(p = ptable1.proc; p < &ptable1.proc[NPROC]; p++){
+        if(p->state != RUNNABLE)
+          continue;
 
-      swtch(&(c->scheduler), p->context);
-      switchkvm();
+        for(p = ptable1.proc; p < &ptable1.proc[NPROC]; p++)
+        {
+          if(p->state != UNUSED)
+          p->age++;
+        }
 
-      // Process is done running for now.
-      // It should have changed its p->state before coming back.
-      c->proc = 0;
+        *seed++;
+        // Switch to chosen process.  It is the process's job
+        // to release ptable.lock and then reacquire it
+        // before jumping back to us.
+        c->proc = p;
+        switchuvm(p);
+        p->state = RUNNING;
+
+        swtch(&(c->scheduler), p->context);
+        switchkvm();
+
+        // Process is done running for now.
+        // It should have changed its p->state before coming back.
+        c->proc = 0;
+      }
+      continue;
     }
+
+    // Lottery algorithm
+    if(ptable2_runnable_count)
+    {
+      int count = 0;
+      for(p = ptable2.proc; p < &ptable2.proc[NPROC]; p++){
+        if(p->state != RUNNABLE)
+          continue;
+
+        int golden_ticket = rand_r(&seed) % total_tickets;
+        if ((count + p->num_tickets) < golden_ticket)
+        {
+          count += p->num_tickets;
+          continue;
+        }
+        
+        for(p = ptable2.proc; p < &ptable2.proc[NPROC]; p++)
+        {
+          if(p->state != UNUSED)
+          p->age++;
+        }
+
+        *seed++;
+        // Switch to chosen process.  It is the process's job
+        // to release ptable.lock and then reacquire it
+        // before jumping back to us.
+        c->proc = p;
+        switchuvm(p);
+        p->state = RUNNING;
+
+        swtch(&(c->scheduler), p->context);
+        switchkvm();
+
+        // Process is done running for now.
+        // It should have changed its p->state before coming back.
+        c->proc = 0;
+        break;
+      }
+      continue;
+    }
+
+    // Blow job first algorithm
+
+
     release(&ptable.lock);
 
   }
