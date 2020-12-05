@@ -420,6 +420,7 @@ void
 scheduler(void)
 {
   struct proc *p;
+  struct proc *temp_proc;
   struct cpu *c = mycpu();
   c->proc = 0;
 
@@ -475,10 +476,10 @@ scheduler(void)
         if(p->state != RUNNABLE)
           continue;
 
-        for(p = ptable1.proc; p < &ptable1.proc[NPROC]; p++)
+        for(temp_proc = ptable1.proc; temp_proc < &ptable1.proc[NPROC]; temp_proc++)
         {
-          if(p->state != UNUSED)
-          p->age++;
+          if(temp_proc->state != UNUSED && temp_proc != p)
+          temp_proc->age++;
         }
 
         *seed++;
@@ -514,10 +515,10 @@ scheduler(void)
           continue;
         }
         
-        for(p = ptable2.proc; p < &ptable2.proc[NPROC]; p++)
+        for(temp_proc = ptable2.proc; temp_proc < &ptable2.proc[NPROC]; temp_proc++)
         {
-          if(p->state != UNUSED)
-          p->age++;
+          if(temp_proc->state != UNUSED temp_proc != p)
+          temp_proc->age++;
         }
 
         *seed++;
