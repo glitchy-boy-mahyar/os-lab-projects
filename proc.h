@@ -58,9 +58,11 @@ struct proc {
   uint q_level;
   int num_tickets;
   int age;
-  int priority_ratio;
-  int arrival_ratio;
-  int executed_cycle_ratio;
+  int arrival_time;
+  double executed_cycle;
+  double priority_ratio;
+  double arrival_ratio;
+  double executed_cycle_ratio;
 };
 
 // Process memory is laid out contiguously, low addresses first:

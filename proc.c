@@ -11,7 +11,7 @@ struct {
   struct spinlock lock;
   struct proc proc[NPROC];
   int trace, trace_pid;
-} ptable1, ptable2, ptable3;
+} ptable;
 
 static struct proc *initproc;
 
@@ -424,65 +424,43 @@ scheduler(void)
   struct cpu *c = mycpu();
   c->proc = 0;
 
-  int ptable1_runnable_count = 0;
-  int ptable2_runnable_count = 0;
-  int ptable3_runnable_count = 0;
   int total_tickets = 0;
-  unsigned int* seed;
-  *seed = 1;
-  //counting ptable1 runnable processes
-  
+  unsigned int seed = 1;
   for(;;){
     // Enable interrupts on this processor.
     sti();
-    for (p = ptable1.proc; p < &ptable1.proc[NPROC]; p++)
+    int proc_count[4] = {0,0,0,0};
+    //counting ptable runnable processes
+    for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     {
       if(p->state == RUNNABLE)
       {
-        ptable1_runnable_count++;
-      }
-    }
-    //counting ptable2 runnable processes
-    if(!ptable1_runnable_count)
-    { 
-      for (p = ptable2.proc; p < &ptable2.proc[NPROC]; p++)
-      {
-        if(p->state == RUNNABLE)
+        if(p->q_level == 2)
         {
           total_tickets += p->num_tickets;
-          ptable2_runnable_count++;
         }
+        proc_count[p->q_level]++;
       }
     }
-    //counting ptable3 runnable processes
-    if(!ptable1_runnable_count && !ptable2_runnable_count)
-    { 
-      for (p = ptable3.proc; p < &ptable3.proc[NPROC]; p++)
-      {
-        if(p->state == RUNNABLE)
-        {
-          ptable3_runnable_count++;
-        }
-      }
-    }
+
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
 
-    // Round Robin algorithm
-    if(ptable1_runnable_count)
+    // Round Robin algorithm to fekr
+    if(proc_count[1])
     {  
-      for(p = ptable1.proc; p < &ptable1.proc[NPROC]; p++){
-        if(p->state != RUNNABLE)
+      for(p = ptable.proc; p < &ptable.proc[NPROC] ; p++){
+        if(p->state != RUNNABLE || p->q_level != 1)
           continue;
 
-        for(temp_proc = ptable1.proc; temp_proc < &ptable1.proc[NPROC]; temp_proc++)
+        for(temp_proc = ptable.proc; temp_proc < &ptable.proc[NPROC]; temp_proc++)
         {
           if(temp_proc->state != UNUSED && temp_proc != p)
           temp_proc->age++;
         }
 
-        *seed++;
+        seed++;
         // Switch to chosen process.  It is the process's job
         // to release ptable.lock and then reacquire it
         // before jumping back to us.
@@ -501,27 +479,27 @@ scheduler(void)
     }
 
     // Lottery algorithm
-    if(ptable2_runnable_count)
+    else if(proc_count[2])
     {
       int count = 0;
-      for(p = ptable2.proc; p < &ptable2.proc[NPROC]; p++){
-        if(p->state != RUNNABLE)
+      int golden_ticket = rand_r(&seed) % total_tickets;
+      for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+        if(p->state != RUNNABLE || p->q_level != 2)
           continue;
 
-        int golden_ticket = rand_r(&seed) % total_tickets;
         if ((count + p->num_tickets) < golden_ticket)
         {
           count += p->num_tickets;
           continue;
         }
         
-        for(temp_proc = ptable2.proc; temp_proc < &ptable2.proc[NPROC]; temp_proc++)
+        for(temp_proc = ptable.proc; temp_proc < &ptable.proc[NPROC]; temp_proc++)
         {
-          if(temp_proc->state != UNUSED temp_proc != p)
+          if(temp_proc->state != UNUSED && temp_proc != p)
             temp_proc->age++;
         }
 
-        *seed++;
+        seed++;
         // Switch to chosen process.  It is the process's job
         // to release ptable.lock and then reacquire it
         // before jumping back to us.
@@ -541,7 +519,48 @@ scheduler(void)
     }
 
     // Blow job first algorithm
+    else if(proc_count[3])
+    {
+      struct proc* run_proc = 0;
+      double min_rank = 100000;
+      for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+        if(p->state != RUNNABLE || p->q_level != 3)
+          continue;
+        double priority = 1 / (double) p->num_tickets;
+        double rank = (priority * p->priority_ratio) + (p->arrival_time * p->arrival_ratio) \
+                      + (p->executed_cycle * p->executed_cycle_ratio);
 
+        if(min_rank > rank)
+        {
+          min_rank = rank;
+          run_proc = p;
+        }
+        for(temp_proc = ptable.proc; temp_proc < &ptable.proc[NPROC]; temp_proc++)
+        {
+          if(temp_proc->state != UNUSED && temp_proc != p)
+            temp_proc->age++;
+        }
+        
+        if(!run_proc)
+          break;
+
+        seed++;
+        // Switch to chosen process.  It is the process's job
+        // to release ptable.lock and then reacquire it
+        // before jumping back to us.
+        c->proc = run_proc;
+        switchuvm(run_proc);
+        run_proc->state = RUNNING;
+
+        swtch(&(c->scheduler), run_proc->context);
+        switchkvm();
+
+        // Process is done running for now.
+        // It should have changed its p->state before coming back.
+        c->proc = 0;
+        break;
+      }
+    }
 
     release(&ptable.lock);
 
