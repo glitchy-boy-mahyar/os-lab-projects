@@ -518,7 +518,7 @@ scheduler(void)
         for(temp_proc = ptable2.proc; temp_proc < &ptable2.proc[NPROC]; temp_proc++)
         {
           if(temp_proc->state != UNUSED temp_proc != p)
-          temp_proc->age++;
+            temp_proc->age++;
         }
 
         *seed++;
