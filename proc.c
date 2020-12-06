@@ -111,6 +111,7 @@ found:
   p->executed_cycle_ratio = 0;
   p->arrival_ratio = 0;
   p->priority_ratio = 0;
+  p->cycle_count = 0;
 
   memset(p->syscall_cnt, 0, sizeof p->syscall_cnt);
   release(&ptable.lock);
@@ -483,6 +484,7 @@ scheduler(void)
           temp_proc->age++;
         }
 
+        p->cycle_count++;
         seed++;
         // Switch to chosen process.  It is the process's job
         // to release ptable.lock and then reacquire it
@@ -523,6 +525,7 @@ scheduler(void)
             temp_proc->age++;
         }
 
+        p->cycle_count++;
         seed++;
         // Switch to chosen process.  It is the process's job
         // to release ptable.lock and then reacquire it
@@ -574,6 +577,7 @@ scheduler(void)
           temp_proc->age++;
       }
 
+      run_proc->cycle_count++;
       seed++;
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
