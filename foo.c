@@ -63,16 +63,18 @@ init_array(int array[SZ])
 void
 cpu_intensive(void)
 {
-    for(int i = 0; i < MAX_CHILDREN; i++) {
-        int array[SZ];
-        init_array(array);
-        
-        // int pid = fork();
-        // if (pid == 0)
-        //     bubble_sort(array);
-        // if (pid > 0)
-        //     continue;
-        bubble_sort(array);
+    int pid = fork();
+
+    if (pid == 0)
+    {
+        while(1){}
+    }
+
+    int pid_2 = fork();
+
+    if (pid_2 == 0)
+    {
+        while(1){}
     }
 
     // while(wait() != -1) {}

@@ -181,7 +181,6 @@ UPROGS=\
 	_usertests\
 	_wc\
 	_zombie\
-	_trace\
 	_print_procs\
 	_change_queue\
 	_change_ticket\
@@ -258,7 +257,6 @@ EXTRA=\
 	mkfs.c ulib.c user.h cat.c echo.c forktest.c grep.c kill.c\
 	ln.c ls.c mkdir.c rm.c stressfs.c usertests.c wc.c zombie.c\
 	printf.c umalloc.c\
-	trace.c\
 	print_procs.c change_queue.c change_ticket.c\
 	change_BJF_proc.c change_BJF_all.c foo.c\
 	README dot-bochsrc *.pl toc.* runoff runoff1 runoff.list\

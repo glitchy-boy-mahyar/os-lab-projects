@@ -323,6 +323,21 @@ int n_tu(int number, int count)
     return result;
 }
 
+void
+print_str_lenght(char* s, int n)
+{
+  int size = 0;
+  int i;
+  while(s[size] != '\0')
+  {
+    size++;
+  }
+  cprintf("%s", s);
+  for(i = 0 ; i < n - size ; i++)
+  {
+    cprintf(" ");
+  }
+}
 
 void float_to_string(float fVal)
 {
@@ -354,14 +369,17 @@ void float_to_string(float fVal)
         answer[tmp] = result[i];
         tmp++;
     }
-
-    cprintf("%s ", answer);
+    print_str_lenght(answer, 8);
 }
+
 
 void
 print_procs_info(void){
   char* states[6] = { "UNUSED", "EMBRYO", "SLEEPING", "RUNNABLE", "RUNNING", "ZOMBIE" };
 
+  cprintf("\n");
+  cprintf("name       pid state      Qlv ticket   PR      AR      ER      RANK   CN\n");
+  cprintf("------------------------------------------------------------------------\n");
   for(struct proc* p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->state == UNUSED)
       continue;
@@ -369,32 +387,80 @@ print_procs_info(void){
     double priority = 1 / (double) p->num_tickets;
     double rank = (priority * p->priority_ratio) + (p->arrival_time * p->arrival_ratio) \
                   + (p->executed_cycle * p->executed_cycle_ratio);
-
-    cprintf("%s %d %s %d %d " , p->name, p->pid, states[p->state], p->q_level, p->num_tickets);
+                
+    print_str_lenght(p->name, 11);
+    if(p->pid < 10)
+    {
+      cprintf("%d   ", p->pid);
+    }
+    else 
+    {
+      cprintf("%d  ", p->pid);
+    }
+    print_str_lenght(states[p->state], 11);
+    cprintf("%d   ", p->q_level);
+    
+  if(p->num_tickets < 10)
+    {
+      cprintf("%d       ", p->num_tickets);
+    }
+    else if(p->num_tickets < 100)
+    {
+      cprintf("%d      ", p->num_tickets);
+    }
+    else if(p->num_tickets < 1000)
+    {
+      cprintf("%d     ", p->num_tickets);
+    }
+    else if(p->num_tickets < 10000)
+    {
+      cprintf("%d    ", p->num_tickets);
+    }
+    else if(p->num_tickets < 100000)
+    {
+      cprintf("%d   ", p->num_tickets);
+    }
+    else if(p->num_tickets < 1000000)
+    {
+      cprintf("%d  ", p->num_tickets);
+    }
+    else if(p->num_tickets < 10000000)
+    {
+      cprintf("%d ", p->num_tickets);
+    }
+    else 
+    {
+      cprintf("%d", p->num_tickets);
+    }
     float_to_string(p->priority_ratio);
     float_to_string(p->arrival_ratio);
     float_to_string(p->executed_cycle_ratio);
     float_to_string(rank);
     cprintf("%d \n", p->cycle_count);
   }  
+  cprintf("\n");
 }
 
 void
 change_queue(int pid , int new_queue){
+  acquire(&ptable.lock);
   for(struct proc* p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->state == UNUSED || p->pid != pid)
       continue;
     p->q_level = new_queue;
   }    
+  release(&ptable.lock);
 }
 
 void
 change_ticket(int pid, int new_ticket){
+  acquire(&ptable.lock);
   for(struct proc* p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->state == UNUSED || p->pid != pid)
       continue;
     p->num_tickets = new_ticket;
   }    
+  release(&ptable.lock);
 }
 
 // double stod(const char* s); //declaration
@@ -423,6 +489,7 @@ double stod(const char* s){    //definition
 
 void 
 change_BJF_parameters_individual(int pid, char* priority_ratio, char* arrival_ratio, char* executed_cycle_ratio){
+  acquire(&ptable.lock);
   for(struct proc* p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->state == UNUSED || p->pid != pid)
       continue;
@@ -430,10 +497,12 @@ change_BJF_parameters_individual(int pid, char* priority_ratio, char* arrival_ra
     p->arrival_ratio = stod(arrival_ratio);
     p->executed_cycle_ratio = stod(executed_cycle_ratio);
   }   
+  release(&ptable.lock);
 }
 
 void
 change_BJF_parameters_all(char* priority_ratio, char* arrival_ratio, char* executed_cycle_ratio){
+  acquire(&ptable.lock);
   for(struct proc* p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->state == UNUSED)
       continue;
@@ -441,6 +510,7 @@ change_BJF_parameters_all(char* priority_ratio, char* arrival_ratio, char* execu
     p->arrival_ratio = stod(arrival_ratio);
     p->executed_cycle_ratio = stod(executed_cycle_ratio);
   }   
+  release(&ptable.lock);
 }
 
 // Exit the current process.  Does not return.
@@ -577,23 +647,28 @@ scheduler(void)
   struct proc *temp_proc;
   struct cpu *c = mycpu();
   c->proc = 0;
+  int proc_count[4];
 
-  int total_tickets = 0;
+  
   unsigned int seed = 1;
 
   for(;;){
     // Enable interrupts on this processor.
     sti();
-    int proc_count[4] = {0,0,0,0};
+    proc_count[0] = 0;
+    proc_count[1] = 0;
+    proc_count[2] = 0;
+    proc_count[3] = 0;
     //counting ptable runnable processes
-
+    int total_tickets = 0;
+    acquire(&ptable.lock);
     for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     {
       if(p->state == RUNNABLE)
       {
-        if (p->age > AGE_THRESH && p->q_level != 1)
+        if (p->age > AGE_THRESH && p->q_level > 1)
         {
-          p->q_level--;
+          p->q_level = p->q_level - 1;
           p->age = 0;
         }
         
@@ -604,21 +679,26 @@ scheduler(void)
         proc_count[p->q_level]++;
       }
     }
-    //cprintf("%d %d %d\n", proc_count[1], proc_count[2], proc_count[3]);
 
 
     // Loop over process table looking for process to run.
-    acquire(&ptable.lock);
     // Round Robin algorithm to fekr
-    if(proc_count[1])
+    if(proc_count[1] > 0)
     {  
-      //cprintf("aaaaaaaa\n");
       for(p = ptable.proc; p < &ptable.proc[NPROC] ; p++){
         if(p->state != RUNNABLE || p->q_level != 1)
           continue;
 
+
+        for(temp_proc = ptable.proc; temp_proc < &ptable.proc[NPROC]; temp_proc++)
+        {
+          if(temp_proc->state == RUNNABLE && temp_proc != p)
+            temp_proc->age = temp_proc->age + 1;
+        }
+
+        p->age = 0;
         p->cycle_count++;
-        seed++;
+        seed = (seed + 1) % 10000;
         // Switch to chosen process.  It is the process's job
         // to release ptable.lock and then reacquire it
         // before jumping back to us.
@@ -638,7 +718,7 @@ scheduler(void)
     }
 
     // Lottery algorithm
-    else if(proc_count[2])
+     if(proc_count[2] > 0 && proc_count[1] == 0)
     {
       int count = 0;
       int golden_ticket = rand_r(&seed) % total_tickets;
@@ -654,12 +734,13 @@ scheduler(void)
         
         for(temp_proc = ptable.proc; temp_proc < &ptable.proc[NPROC]; temp_proc++)
         {
-          if(temp_proc->state != UNUSED && temp_proc != p)
-            temp_proc->age++;
+          if(temp_proc->state == RUNNABLE && temp_proc != p)
+            temp_proc->age = temp_proc->age + 1;
         }
 
+        p->age = 0;
         p->cycle_count++;
-        seed++;
+        seed = (seed + 1) % 10000;
         // Switch to chosen process.  It is the process's job
         // to release ptable.lock and then reacquire it
         // before jumping back to us.
@@ -679,8 +760,8 @@ scheduler(void)
       continue;
     }
 
-    // Blow job first algorithm
-    else if(proc_count[3])
+    // Best job first algorithm
+    if(proc_count[3] > 0 && proc_count[2] == 0 && proc_count[1] == 0)
     {
       struct proc* run_proc = 0;
       double min_rank = 100000;
@@ -706,12 +787,13 @@ scheduler(void)
       //running run_proc
       for(temp_proc = ptable.proc; temp_proc < &ptable.proc[NPROC]; temp_proc++)
       {
-        if(temp_proc->state != UNUSED && temp_proc != run_proc)
-          temp_proc->age++;
+        if(temp_proc->state == RUNNABLE && temp_proc != run_proc)
+          temp_proc->age = temp_proc->age + 1;
       }
 
+      p->age = 0;
       run_proc->cycle_count++;
-      seed++;
+      seed = (seed + 1) % 10000;
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
@@ -726,12 +808,8 @@ scheduler(void)
       // It should have changed its p->state before coming back.
       run_proc->executed_cycle += 0.1;
       c->proc = 0;
-      release(&ptable.lock);
     }
-    
-    else{
-      release(&ptable.lock);
-    }
+    release(&ptable.lock);
   }
 }
 
