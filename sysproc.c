@@ -113,6 +113,7 @@ int
 sys_get_children(void){
   int pid;
   argptr(0 , (void*)&pid , sizeof(pid));
+
   int result = get_children(pid);
   return result;
 }
@@ -122,5 +123,58 @@ sys_trace_syscalls(void){
   int state;
   argint(0, &state);
   trace_syscalls(state);
+  return 0;
+}
+
+int
+sys_print_procs_info(void){
+  print_procs_info();
+  return 0;
+}
+
+int
+sys_change_queue(void){
+  int pid, new_queue;
+  argptr(0 , (void*)&pid , sizeof(pid));
+  argptr(1 , (void*)&new_queue , sizeof(new_queue));
+
+  change_queue(pid , new_queue);
+  return 0;
+}
+
+int
+sys_change_ticket(void){
+  int pid, new_ticket;
+  argptr(0 , (void*)&pid , sizeof(pid));
+  argptr(1 , (void*)&new_ticket , sizeof(new_ticket));
+
+  change_ticket(pid, new_ticket);
+  return 0;
+}
+
+int
+sys_change_BJF_parameters_individual(void){
+  int pid;
+
+  char* ratio[3];
+
+  argptr(0 , (void*)&pid , sizeof(pid));
+  argstr(1 , (void*)&ratio[0]);
+  argstr(2 , (void*)&ratio[1]);
+  argstr(3 , (void*)&ratio[2]);
+
+  change_BJF_parameters_individual(pid, ratio[0], ratio[1], ratio[2]);
+  return 0; 
+}
+
+int
+sys_change_BJF_parameters_all(void){
+  char* ratio[3];
+
+  argstr(0 , (void*)&ratio[0]);
+  argstr(1 , (void*)&ratio[1]);
+  argstr(2 , (void*)&ratio[2]); 
+
+  change_BJF_parameters_all(ratio[0], ratio[1], ratio[2]);
   return 0;
 }

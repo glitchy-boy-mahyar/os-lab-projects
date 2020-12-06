@@ -313,6 +313,136 @@ trace_syscalls(int state)
   }
   cprintf("\n");
 }
+
+int n_tu(int number, int count)
+{
+    int result = 1;
+    while(count-- > 0)
+        result *= number;
+
+    return result;
+}
+
+
+void float_to_string(float fVal)
+{
+    char result[100];
+    int dVal, dec, i;
+
+    char answer[100] = {0};
+
+    fVal += 0.005;   // added after a comment from Matt McNabb, see below.
+
+    dVal = fVal;
+    dec = (int)(fVal * 100) % 100;
+
+    memset(result, 0, 100);
+    result[0] = (dec % 10) + '0';
+    result[1] = (dec / 10) + '0';
+    result[2] = '.';
+
+    i = 3;
+    while (dVal > 0)
+    {
+        result[i] = (dVal % 10) + '0';
+        dVal /= 10;
+        i++;
+    }
+
+    int tmp = 0;
+    for (i=strlen(result)-1; i>=0; i--){
+        answer[tmp] = result[i];
+        tmp++;
+    }
+
+    cprintf("%s ", answer);
+}
+
+void
+print_procs_info(void){
+  char* states[6] = { "UNUSED", "EMBRYO", "SLEEPING", "RUNNABLE", "RUNNING", "ZOMBIE" };
+
+  for(struct proc* p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->state == UNUSED)
+      continue;
+
+    double priority = 1 / (double) p->num_tickets;
+    double rank = (priority * p->priority_ratio) + (p->arrival_time * p->arrival_ratio) \
+                  + (p->executed_cycle * p->executed_cycle_ratio);
+
+    cprintf("%s %d %s %d %d " , p->name, p->pid, states[p->state], p->q_level, p->num_tickets);
+    float_to_string(p->priority_ratio);
+    float_to_string(p->arrival_ratio);
+    float_to_string(p->executed_cycle_ratio);
+    float_to_string(rank);
+    cprintf("%d \n", p->cycle_count);
+  }  
+}
+
+void
+change_queue(int pid , int new_queue){
+  for(struct proc* p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->state == UNUSED || p->pid != pid)
+      continue;
+    p->q_level = new_queue;
+  }    
+}
+
+void
+change_ticket(int pid, int new_ticket){
+  for(struct proc* p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->state == UNUSED || p->pid != pid)
+      continue;
+    p->num_tickets = new_ticket;
+  }    
+}
+
+// double stod(const char* s); //declaration
+
+// double d = stod(row[0]); //call
+
+double stod(const char* s){    //definition
+    double rez = 0, fact = 1;
+    if (*s == '-'){
+        s++;
+        fact = -1;
+    };
+    for (int point_seen = 0; *s; s++){
+        if (*s == '.'){
+            point_seen = 1;
+            continue;
+        };
+        int d = *s - '0';
+        if (d >= 0 && d <= 9){
+            if (point_seen) fact /= 10.0f;
+            rez = rez * 10.0f + (float)d;
+        };
+    };
+    return rez * fact;
+}
+
+void 
+change_BJF_parameters_individual(int pid, char* priority_ratio, char* arrival_ratio, char* executed_cycle_ratio){
+  for(struct proc* p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->state == UNUSED || p->pid != pid)
+      continue;
+    p->priority_ratio = stod(priority_ratio);
+    p->arrival_ratio = stod(arrival_ratio);
+    p->executed_cycle_ratio = stod(executed_cycle_ratio);
+  }   
+}
+
+void
+change_BJF_parameters_all(char* priority_ratio, char* arrival_ratio, char* executed_cycle_ratio){
+  for(struct proc* p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->state == UNUSED)
+      continue;
+    p->priority_ratio = stod(priority_ratio);
+    p->arrival_ratio = stod(arrival_ratio);
+    p->executed_cycle_ratio = stod(executed_cycle_ratio);
+  }   
+}
+
 // Exit the current process.  Does not return.
 // An exited process remains in the zombie state
 // until its parent calls wait() to find out it exited.

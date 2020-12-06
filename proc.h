@@ -58,6 +58,7 @@ struct proc {
   uint q_level;
   int num_tickets;
   int age;
+  int cycle_count;
   int arrival_time;
   double executed_cycle;
   double priority_ratio;

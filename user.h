@@ -26,6 +26,11 @@ int uptime(void);
 void reverse_number(int);
 int get_children(int);
 void trace_syscalls(int);
+void print_procs_info(void);
+void change_queue(int, int);
+void change_ticket(int, int);
+void change_BJF_parameters_individual(int, char*, char*, char*);
+void change_BJF_parameters_all(char*, char*, char*);
 
 // ulib.c
 int stat(const char*, struct stat*);

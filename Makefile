@@ -186,6 +186,11 @@ UPROGS=\
 	_test_get_children\
 	_test_reverse_number\
 	_test_trace_syscalls\
+	_print_procs\
+	_change_queue\
+	_change_ticket\
+	_change_BJF_proc\
+	_change_BJF_all\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
@@ -257,7 +262,8 @@ EXTRA=\
 	ln.c ls.c mkdir.c rm.c stressfs.c usertests.c wc.c zombie.c\
 	printf.c umalloc.c\
 	lcm.c trace.c\
-	test_get_children.c test_reverse_number.c test_trace_syscalls.c\
+	test_get_children.c test_reverse_number.c test_trace_syscalls.c print_procs.c change_queue.c change_ticket.c\
+	change_BJF_proc.c change_BJF_all.c\
 	README dot-bochsrc *.pl toc.* runoff runoff1 runoff.list\
 	.gdbinit.tmpl gdbutil\
 

@@ -106,6 +106,11 @@ extern int sys_uptime(void);
 extern int sys_reverse_number(void);
 extern int sys_get_children(void);
 extern int sys_trace_syscalls(void);
+extern int sys_print_procs_info(void);
+extern int sys_change_queue(void);
+extern int sys_change_ticket(void);
+extern int sys_change_BJF_parameters_individual(void);
+extern int sys_change_BJF_parameters_all(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -132,6 +137,11 @@ static int (*syscalls[])(void) = {
 [SYS_reverse_number] sys_reverse_number,
 [SYS_get_children] sys_get_children,
 [SYS_trace_syscalls] sys_trace_syscalls,
+[SYS_print_procs_info] sys_print_procs_info,
+[SYS_change_queue] sys_change_queue,
+[SYS_change_ticket] sys_change_ticket,
+[SYS_change_BJF_parameters_individual] sys_change_BJF_parameters_individual,
+[SYS_change_BJF_parameters_all] sys_change_BJF_parameters_all,
 };
 
 void

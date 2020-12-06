@@ -1,7 +1,7 @@
 #ifndef __SYS_CALL_H__
 #define __SYS_CALL_H__
 
-#define N_SYSCALL 24
+#define N_SYSCALL 29
 
 // System call numbers
 #define SYS_fork    1
@@ -28,5 +28,10 @@
 #define SYS_reverse_number 22
 #define SYS_get_children 23
 #define SYS_trace_syscalls 24
+#define SYS_print_procs_info 25
+#define SYS_change_queue 26
+#define SYS_change_ticket 27
+#define SYS_change_BJF_parameters_individual 28
+#define SYS_change_BJF_parameters_all 29
 
 #endif
