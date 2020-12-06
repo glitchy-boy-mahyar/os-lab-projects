@@ -568,6 +568,8 @@ rand_r (unsigned int *seed)
   return result;
 }
 
+const int AGE_THRESH = 10000;
+
 void
 scheduler(void)
 {
@@ -584,10 +586,17 @@ scheduler(void)
     sti();
     int proc_count[4] = {0,0,0,0};
     //counting ptable runnable processes
+
     for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     {
       if(p->state == RUNNABLE)
       {
+        if (p->age > AGE_THRESH && p->q_level != 1)
+        {
+          p->q_level--;
+          p->age = 0;
+        }
+        
         if(p->q_level == 2)
         {
           total_tickets += p->num_tickets;
@@ -607,12 +616,6 @@ scheduler(void)
       for(p = ptable.proc; p < &ptable.proc[NPROC] ; p++){
         if(p->state != RUNNABLE || p->q_level != 1)
           continue;
-
-        for(temp_proc = ptable.proc; temp_proc < &ptable.proc[NPROC]; temp_proc++)
-        {
-          if(temp_proc->state != UNUSED && temp_proc != p)
-          temp_proc->age++;
-        }
 
         p->cycle_count++;
         seed++;
