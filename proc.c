@@ -591,7 +591,10 @@ scheduler(void)
       c->proc = 0;
       release(&ptable.lock);
     }
-
+    
+    else{
+      release(&ptable.lock);
+    }
   }
 }
 
