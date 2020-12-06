@@ -375,7 +375,7 @@ print_procs_info(void){
     float_to_string(p->arrival_ratio);
     float_to_string(p->executed_cycle_ratio);
     float_to_string(rank);
-    cprintf("%d \n", p->cycle_count);
+    cprintf("%d %d\n", p->cycle_count, p->age);
   }  
 }
 
@@ -577,23 +577,28 @@ scheduler(void)
   struct proc *temp_proc;
   struct cpu *c = mycpu();
   c->proc = 0;
+  int proc_count[4];
 
-  int total_tickets = 0;
+  
   unsigned int seed = 1;
 
   for(;;){
     // Enable interrupts on this processor.
     sti();
-    int proc_count[4] = {0,0,0,0};
+    proc_count[0] = 0;
+    proc_count[1] = 0;
+    proc_count[2] = 0;
+    proc_count[3] = 0;
     //counting ptable runnable processes
-
+    int total_tickets = 0;
     for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     {
       if(p->state == RUNNABLE)
       {
-        if (p->age > AGE_THRESH && p->q_level != 1)
+        if (p->age > AGE_THRESH && p->q_level > 1)
         {
-          p->q_level--;
+          //cprintf("kiiiiir\n");
+          p->q_level = p->q_level - 1;
           p->age = 0;
         }
         
@@ -617,8 +622,15 @@ scheduler(void)
         if(p->state != RUNNABLE || p->q_level != 1)
           continue;
 
+
+        for(temp_proc = ptable.proc; temp_proc < &ptable.proc[NPROC]; temp_proc++)
+        {
+          if(temp_proc->state == RUNNABLE && temp_proc != p)
+            temp_proc->age = temp_proc->age + 1;
+        }
+
         p->cycle_count++;
-        seed++;
+        seed = (seed + 1) % 10000;
         // Switch to chosen process.  It is the process's job
         // to release ptable.lock and then reacquire it
         // before jumping back to us.
@@ -634,7 +646,6 @@ scheduler(void)
         c->proc = 0;
       }
       release(&ptable.lock);
-      continue;
     }
 
     // Lottery algorithm
@@ -654,12 +665,12 @@ scheduler(void)
         
         for(temp_proc = ptable.proc; temp_proc < &ptable.proc[NPROC]; temp_proc++)
         {
-          if(temp_proc->state != UNUSED && temp_proc != p)
-            temp_proc->age++;
+          if(temp_proc->state == RUNNABLE && temp_proc != p)
+            temp_proc->age = temp_proc->age + 1;
         }
 
         p->cycle_count++;
-        seed++;
+        seed = (seed + 1) % 10000;
         // Switch to chosen process.  It is the process's job
         // to release ptable.lock and then reacquire it
         // before jumping back to us.
@@ -676,7 +687,6 @@ scheduler(void)
         break;
       }
       release(&ptable.lock);
-      continue;
     }
 
     // Blow job first algorithm
@@ -706,12 +716,12 @@ scheduler(void)
       //running run_proc
       for(temp_proc = ptable.proc; temp_proc < &ptable.proc[NPROC]; temp_proc++)
       {
-        if(temp_proc->state != UNUSED && temp_proc != run_proc)
-          temp_proc->age++;
+        if(temp_proc->state == RUNNABLE && temp_proc != run_proc)
+          temp_proc->age = temp_proc->age + 1;
       }
 
       run_proc->cycle_count++;
-      seed++;
+      seed = (seed + 1) % 10000;
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.

@@ -11,7 +11,7 @@ char *tr_argv[] = {"trace", 0};
 int
 main(void)
 {
-  int pid, tr_pid, wpid;
+  int pid, wpid;
 
   if(open("console", O_RDWR) < 0){
     mknod("console", 1, 1);
@@ -22,17 +22,17 @@ main(void)
 
   printf(1, "init: starting trace\n");
 
-  tr_pid = fork();
-  if(tr_pid < 0){
-    printf(1, "init: fork failed\n");
-    exit();
-  }
+  //tr_pid = fork();
+  //if(tr_pid < 0){
+  //  printf(1, "init: fork failed\n");
+  //  exit();
+  //}
 
-  if(tr_pid == 0){
-    exec("trace", tr_argv);
-    printf(1, "init: exec trace failed\n");
-    exit();
-  }
+  //if(tr_pid == 0){
+  //  exec("trace", tr_argv);
+  //  printf(1, "init: exec trace failed\n");
+  //  exit();
+  //}
 
   for(;;){
     printf(1, "init: starting sh\n");
@@ -47,7 +47,7 @@ main(void)
       printf(1, "init: exec sh failed\n");
       exit();
     }
-    while((wpid=wait()) >= 0 && wpid != pid && wpid != tr_pid)
+    while((wpid=wait()) >= 0 && wpid != pid)
       printf(1, "zombie!\n");
   }
 }
