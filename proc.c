@@ -560,35 +560,37 @@ scheduler(void)
           min_rank = rank;
           run_proc = p;
         }
-        for(temp_proc = ptable.proc; temp_proc < &ptable.proc[NPROC]; temp_proc++)
-        {
-          if(temp_proc->state != UNUSED && temp_proc != p)
-            temp_proc->age++;
-        }
-        
-        if(!run_proc)
-          break;
-
-        seed++;
-        // Switch to chosen process.  It is the process's job
-        // to release ptable.lock and then reacquire it
-        // before jumping back to us.
-        c->proc = run_proc;
-        switchuvm(run_proc);
-        run_proc->state = RUNNING;
-
-        swtch(&(c->scheduler), run_proc->context);
-        switchkvm();
-
-        // Process is done running for now.
-        // It should have changed its p->state before coming back.
-        run_proc->executed_cycle += 0.1;
-        c->proc = 0;
-        break;
       }
-    }
+      
+      if(!run_proc){
+        release(&ptable.lock);
+        continue;
+      }
 
-    release(&ptable.lock);
+      //running run_proc
+      for(temp_proc = ptable.proc; temp_proc < &ptable.proc[NPROC]; temp_proc++)
+      {
+        if(temp_proc->state != UNUSED && temp_proc != run_proc)
+          temp_proc->age++;
+      }
+
+      seed++;
+      // Switch to chosen process.  It is the process's job
+      // to release ptable.lock and then reacquire it
+      // before jumping back to us.
+      c->proc = run_proc;
+      switchuvm(run_proc);
+      run_proc->state = RUNNING;
+
+      swtch(&(c->scheduler), run_proc->context);
+      switchkvm();
+
+      // Process is done running for now.
+      // It should have changed its p->state before coming back.
+      run_proc->executed_cycle += 0.1;
+      c->proc = 0;
+      release(&ptable.lock);
+    }
 
   }
 }
