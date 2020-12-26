@@ -183,9 +183,6 @@ UPROGS=\
 	_zombie\
 	_lcm\
 	_trace\
-	_test_get_children\
-	_test_reverse_number\
-	_test_trace_syscalls\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
@@ -257,7 +254,6 @@ EXTRA=\
 	ln.c ls.c mkdir.c rm.c stressfs.c usertests.c wc.c zombie.c\
 	printf.c umalloc.c\
 	lcm.c trace.c\
-	test_get_children.c test_reverse_number.c test_trace_syscalls.c\
 	README dot-bochsrc *.pl toc.* runoff runoff1 runoff.list\
 	.gdbinit.tmpl gdbutil\
 
