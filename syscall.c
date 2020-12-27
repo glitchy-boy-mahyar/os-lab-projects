@@ -116,6 +116,7 @@ extern int sys_p_cv_wait(void);
 extern int sys_chsv(void);
 extern int sys_p_lock(void);
 extern int sys_p_unlock(void);
+extern int sys_print_log(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -152,6 +153,7 @@ static int (*syscalls[])(void) = {
 [SYS_chsv] sys_chsv,
 [SYS_p_lock] sys_p_lock,
 [SYS_p_unlock] sys_p_unlock,
+[SYS_print_log] sys_print_log,
 };
 
 void

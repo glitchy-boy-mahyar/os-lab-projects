@@ -7,6 +7,13 @@
 #include "mmu.h"
 #include "proc.h"
 
+#define WC 0
+#define RC 1
+#define LOG 2
+
+#define mutex 0
+#define wrt 1
+
 #define NSV 5
 int sv_array[NSV] = {0, 0, 0, 0, 0};
 
@@ -183,49 +190,90 @@ sys_cv_signal(void)
 }
 
 int
-sys_p_cv_signal(void){
+sys_p_cv_signal(void)
+{
+  cli();
   int cv_ind;
   argint(0, &cv_ind);
   
   p_wakeup(cv_ind);
+  sti();
   return 0;
 }
 
 int
 sys_p_cv_wait(void)
 {
+  cli();
   int cv_ind;
   argint(0, &cv_ind);
   
   p_sleep1(cv_ind);
+  sti();
   return 0;
 }
 
 int
 sys_chsv(void)
 {
+  cli();
   int sv_index, sv_change_val;
   argint(0, &sv_index);
   argint(1, &sv_change_val);
 
   sv_array[sv_index] += sv_change_val;
+  sti();
   return sv_array[sv_index];
 }
 
 int
 sys_p_lock(void)
 {
+  cli();
   int ind;
   argint(0, &ind);
   pp_lock(ind);
+  sti();
   return 0;
 }
 
 int
 sys_p_unlock(void)
 {
+  cli();
   int ind;
   argint(0, &ind);
   pp_unlock(ind);
+  sti();
+  return 0;
+}
+
+int
+sys_print_log(void)
+{
+  cli();
+  int val;
+  argint(0, &val);
+  if(val == 0)
+  {
+    cprintf("Writer waits for wrt...\n");
+  }
+  else if(val == 1)
+  {
+    cprintf("log_val = %d\n", sv_array[LOG]);
+  }
+  else if(val == 2)
+  {
+    cprintf("Goodbye writer with pid %d\n", myproc()->pid);
+  }
+  else if(val == 3)
+  {
+    cprintf("LOG = %d / reader = %d\n" , sv_array[LOG] , myproc()->pid);
+  }
+  else if(val == 4)
+  {
+    cprintf("Goodbye reader with pid %d\n", myproc()->pid);
+  }
+  sti();
   return 0;
 }

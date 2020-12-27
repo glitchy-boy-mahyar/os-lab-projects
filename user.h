@@ -38,6 +38,7 @@ int p_cv_signal(int);
 int chsv(int, int);
 void p_lock(int);
 void p_unlock(int);
+void print_log(int);
 
 // ulib.c
 int stat(const char*, struct stat*);
