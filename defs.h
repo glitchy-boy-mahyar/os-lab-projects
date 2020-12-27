@@ -136,7 +136,12 @@ void            semaphore_init(int, int, int);
 void            semaphore_acquire(int, struct proc*);
 void            semaphore_release(int);
 void            sleep1(void*, struct spinlock*);
+void            p_init_lock(struct spinlock*);
+void            p_lock(struct spinlock*);
+void            p_unlock(struct spinlock*);
 
+void            p_wakeup(int cv_ind);
+void            p_sleep1(int cv_ind);
 // swtch.S
 void            swtch(struct context**, struct context*);
 

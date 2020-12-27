@@ -11,6 +11,7 @@
 typedef struct Queue queue;
 
 #define NSEM 5
+#define NCV 3
 
 struct {
   struct spinlock lock;
@@ -30,6 +31,8 @@ struct Sem {
   queue q;
 } semaphore[NSEM];
 
+condition_var cvtable[NCV];
+
 static struct proc *initproc;
 
 int nextpid = 1;
@@ -44,6 +47,10 @@ pinit(void)
   initlock(&ptable.lock, "ptable");
   ptable.trace = 0;
   ptable.trace_pid = -1;
+
+  for(int i = 0 ; i < NCV ; i++){
+    p_init_lock(&cvtable[i].lock);
+  }
 }
 
 void
@@ -574,6 +581,13 @@ forkret(void)
 }
 
 // Customized sleep function for condition_var
+
+void
+p_sleep1(int cv_ind){
+  condition_var* cv = &cvtable[cv_ind];
+  sleep1(cv, &cv->lock);
+}
+
 void
 sleep1(void* chan, struct spinlock* lk)
 {
@@ -654,6 +668,13 @@ wakeup1(void *chan)
 }
 
 // Wake up all processes sleeping on chan.
+
+void
+p_wakeup(int cv_ind){
+  condition_var* cv = &cvtable[cv_ind];
+  wakeup(cv);
+}
+
 void
 wakeup(void *chan)
 {
@@ -720,4 +741,22 @@ procdump(void)
     }
     cprintf("\n");
   }
+}
+
+void
+p_init_lock(struct spinlock* lock)
+{
+  lock->locked = 0;
+}
+
+void
+p_lock(struct spinlock* lock)
+{
+  while(xchg(&lock->locked, 1) != 0) {}
+}
+
+void
+p_unlock(struct spinlock* lock)
+{
+  xchg(&lock->locked, 0);
 }

@@ -33,6 +33,9 @@ void semaphore_acquire(int);
 void semaphore_release(int);
 int cv_wait(condition_var*);
 int cv_signal(condition_var*);
+int p_cv_wait(int);
+int p_cv_signal(int);
+int chsv(int, int);
 
 // ulib.c
 int stat(const char*, struct stat*);

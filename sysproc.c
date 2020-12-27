@@ -7,6 +7,9 @@
 #include "mmu.h"
 #include "proc.h"
 
+#define NSV 2
+int sv_array[NSV] = {0};
+
 int
 sys_fork(void)
 {
@@ -177,4 +180,34 @@ sys_cv_signal(void)
   
   wakeup(cv);
   return 0;
+}
+
+int
+sys_p_cv_signal(void){
+  int cv_ind;
+  argint(0, &cv_ind);
+  
+  p_wakeup(cv_ind);
+  return 0;
+}
+
+int
+sys_p_cv_wait(void)
+{
+  int cv_ind;
+  argint(0, &cv_ind);
+  
+  p_sleep1(cv_ind);
+  return 0;
+}
+
+int
+sys_chsv(void)
+{
+  int sv_index, sv_change_val;
+  argint(0, &sv_index);
+  argint(1, &sv_change_val);
+
+  sv_array[sv_index] += sv_change_val;
+  return sv_array[sv_index];
 }
