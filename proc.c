@@ -14,6 +14,8 @@ typedef struct Queue queue;
 #define NCV 3
 #define NSP 3
 
+#define BUF_SZ 5
+
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
@@ -25,6 +27,11 @@ struct Queue {
   struct proc* array[NPROC];
 };
 
+struct Char_Queue {
+  int front, rear, size, cap;
+  char array[BUF_SZ];
+} charq;
+
 struct Sem {
   struct spinlock lock;
   struct sleeplock sl;
@@ -34,7 +41,6 @@ struct Sem {
 
 condition_var cvtable[NCV];
 struct spinlock sltable[NSP];
-
 static struct proc *initproc;
 
 int nextpid = 1;
@@ -44,19 +50,31 @@ extern void trapret(void);
 static void wakeup1(void *chan);
 
 void
+charq_init()
+{
+  charq.front = 0;
+  charq.rear = BUF_SZ - 1;
+  charq.size = 0;
+  charq.cap = BUF_SZ;
+  
+  for(int i = 0; i < BUF_SZ; ++i)
+    charq.array[i] = (char)(0);
+}
+
+void
 pinit(void)
 {
   initlock(&ptable.lock, "ptable");
   ptable.trace = 0;
   ptable.trace_pid = -1;
 
-  for(int i = 0 ; i < NCV ; i++){
+  for(int i = 0 ; i < NCV ; i++)
     p_init_lock(&cvtable[i].lock);
-  }
   
-  for(int i = 0; i < NSP; i++){
+  for(int i = 0; i < NSP; i++)
     p_init_lock(&sltable[i]);
-  }
+
+  charq_init();
 }
 
 void
@@ -68,15 +86,31 @@ qinit(queue* q) {
 }
 
 int
-empty(queue* q) {
+empty(queue* q)
+{
   return q->size == 0;
 }
 
-void enqueue(queue* q, struct proc* n)
+int
+charq_empty()
+{
+  return charq.size == 0;
+}
+
+void
+enqueue(queue* q, struct proc* n)
 {
   q->rear = (q->rear + 1) % q->cap;
   q->array[q->rear] = n;
   q->size += 1;
+}
+
+void
+charq_enq(char c)
+{
+  charq.rear = (charq.rear + 1) % charq.cap;
+  charq.array[charq.rear] = c;
+  charq.size += 1;
 }
 
 struct proc*
@@ -86,6 +120,16 @@ dequeue(queue* q) {
   struct proc* res = q->array[q->front];
   q->front = (q->front + 1) % q->cap;
   q->size -= 1;
+  return res;
+}
+
+char
+charq_deq(void) {
+  if (charq_empty())
+    return (char)(0);
+  char res = charq.array[charq.front];
+  charq.front = (charq.front + 1) % charq.cap;
+  charq.size -= 1;
   return res;
 }
 
@@ -101,23 +145,26 @@ void
 semaphore_acquire(int i, struct proc* proc)
 {
   cli();
-  // acquire(&semaphore[i].lock);
+  acquire(&semaphore[i].lock);
 
   if(semaphore[i].count == 0){
     enqueue(&semaphore[i].q, proc);
     // sleep(proc, &semaphore[i].lock);
+    
+    release(&semaphore[i].lock);
     acquiresleep(&proc->slock);
+    acquire(&semaphore[i].lock);
   }
   semaphore[i].count -= 1;
 
-  // release(&semaphore[i].lock);
+  release(&semaphore[i].lock);
   sti();
 }
 
 void
 semaphore_release(int i) {
   cli();
-  // acquire(&semaphore[i].lock);
+  acquire(&semaphore[i].lock);
 
   semaphore[i].count += 1;
   if(!empty(&semaphore[i].q)){
@@ -126,7 +173,7 @@ semaphore_release(int i) {
     releasesleep(&proc->slock);
   }
 
-  // release(&semaphore[i].lock);
+  release(&semaphore[i].lock);
   sti();
 }
 

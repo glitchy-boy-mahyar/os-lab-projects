@@ -274,6 +274,36 @@ sys_print_log(void)
   {
     cprintf("Goodbye reader with pid %d\n", myproc()->pid);
   }
+  else if(val % 2 == 0)
+  {
+    int cint = val / 2 - 5;
+    char c[2] = {(char)(cint), '\0'};
+    cprintf("Producer: wrote char '%s'\n", c);
+  }
+  else if(val % 2 == 1)
+  {
+    int cint = (val - 1) / 2 - 5;
+    char c[2] = {(char)(cint), '\0'};
+    cprintf("Consumer: read char '%s'\n", c);
+  }
   sti();
   return 0;
+}
+
+int
+sys_cqenq(void)
+{
+  int cint;
+  argint(0, &cint);
+  char c = (char)(cint);
+
+  charq_enq(c);
+  return 0;
+}
+
+int
+sys_cqdeq(void)
+{
+  char c = charq_deq();
+  return (int)(c);
 }

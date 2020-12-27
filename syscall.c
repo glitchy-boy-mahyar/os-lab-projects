@@ -117,6 +117,8 @@ extern int sys_chsv(void);
 extern int sys_p_lock(void);
 extern int sys_p_unlock(void);
 extern int sys_print_log(void);
+extern int sys_cqenq(void);
+extern int sys_cqdeq(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -154,6 +156,8 @@ static int (*syscalls[])(void) = {
 [SYS_p_lock] sys_p_lock,
 [SYS_p_unlock] sys_p_unlock,
 [SYS_print_log] sys_print_log,
+[SYS_cqenq] sys_cqenq,
+[SYS_cqdeq] sys_cqdeq,
 };
 
 void

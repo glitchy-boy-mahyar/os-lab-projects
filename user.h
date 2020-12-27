@@ -39,6 +39,8 @@ int chsv(int, int);
 void p_lock(int);
 void p_unlock(int);
 void print_log(int);
+void cqenq(char);
+int cqdeq(void);
 
 // ulib.c
 int stat(const char*, struct stat*);

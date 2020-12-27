@@ -186,6 +186,7 @@ UPROGS=\
 	_test_sem\
 	_test_condvar\
 	_test_rw_1\
+	_test_pc\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
@@ -260,6 +261,7 @@ EXTRA=\
 	test_sem.c\
 	test_condvar.c\
 	test_rw_1.c\
+	test_pc.c\
 	README dot-bochsrc *.pl toc.* runoff runoff1 runoff.list\
 	.gdbinit.tmpl gdbutil\
 

@@ -17,33 +17,22 @@ int main() {
 
     int pid = fork();
     if(pid == 0){
+        sleep(5);
+        printf(1, "i'm stuck at this sem\n");
         semaphore_acquire(1);
-        printf(1, "bitch finally got over that shit\n");
+        printf(1, "finally got over that sem\n");
         semaphore_release(1);
         printf(1, "time to go\n");
-        // exit();
     }
     else if(pid > 0){
-        printf(1, "you seriously want this lock, bitch?\n");
-        sleep(100);
+        printf(1, "you seriously want this sem, yo?\n");
+        sleep(50);
         semaphore_release(1);
-        sleep(100);
+        sleep(50);
         printf(1, "now what? should i wait?\n");
         wait();
-        printf(1, "got over that bastard\n");
+        printf(1, "boom goes the dynamite\n");
     }
-    // semaphore_acquire(0);
     printf(1, "sounds good so far for me (%d)\n", getpid());
     exit();
-    
-    // int x = 0;
-    // struct spinlock lk;
-    // init_lock(&lk);
-    // lock(&lk);
-
-    // x = 2;
-    // printf(1, "x is now %d\n", x);
-
-    // unlock(&lk);
-    // exit();
 }

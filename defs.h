@@ -145,6 +145,9 @@ void            p_sleep1(int cv_ind);
 
 void            pp_lock(int);
 void            pp_unlock(int);
+int             charq_empty();
+void            charq_enq(char);
+char            charq_deq(void);
 // swtch.S
 void            swtch(struct context**, struct context*);
 
