@@ -2,6 +2,7 @@
 #define __PROC_H__
 
 #include "syscall.h"
+#include "sleeplock.h"
 
 // Per-CPU state
 struct cpu {
@@ -55,6 +56,7 @@ struct proc {
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
   int syscall_cnt[N_SYSCALL];  // For saving count of called system calls
+  struct sleeplock slock;      // Let's see
 };
 
 // Process memory is laid out contiguously, low addresses first:

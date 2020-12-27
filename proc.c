@@ -80,8 +80,6 @@ void
 semaphore_init(int i, int v, int m)
 {
   initlock(&semaphore[i].lock, "semaphore");
-  // initsleeplock(&semaphore[i].sl, "sleeplock");
-  // acquiresleep(&semaphore[i].sl);
   semaphore[i].count = v - m;
   qinit(&semaphore[i].q);
 }
@@ -89,24 +87,29 @@ semaphore_init(int i, int v, int m)
 void
 semaphore_acquire(int i, struct proc* proc)
 {
-  acquire(&semaphore[i].lock);
+  // acquire(&semaphore[i].lock);
+  cli();
   if(semaphore[i].count == 0){
     enqueue(&semaphore[i].q, proc);
-    sleep(proc, &semaphore[i].lock);
+    // sleep(proc, &semaphore[i].lock);
+    acquiresleep(&proc->slock);
   }
   semaphore[i].count -= 1;
-  release(&semaphore[i].lock);
+  sti();
+  // release(&semaphore[i].lock);
 }
 
 void
 semaphore_release(int i) {
-  acquire(&semaphore[i].lock);
+  // acquire(&semaphore[i].lock);
+  cli();
   semaphore[i].count += 1;
   if(!empty(&semaphore[i].q)){
     struct proc* proc = dequeue(&semaphore[i].q);
-    wakeup(proc);
+    releasesleep(&proc->slock);
   }
-  release(&semaphore[i].lock);
+  // release(&semaphore[i].lock);
+  sti();
 }
 
 // Must be called with interrupts disabled
@@ -297,6 +300,9 @@ fork(void)
 
   if (pid == initproc->pid + 1)
     ptable.trace_pid = pid;
+
+  initsleeplock(&np->slock, np->name);
+  acquiresleep(&np->slock);
 
   acquire(&ptable.lock);
 
