@@ -124,3 +124,33 @@ sys_trace_syscalls(void){
   trace_syscalls(state);
   return 0;
 }
+
+int
+sys_semaphore_initialize(void)
+{
+  int i, v, m;
+  argint(0, &i);
+  argint(1, &v);
+  argint(2, &m);
+  semaphore_init(i, v, m);
+  return 0;
+}
+
+int
+sys_semaphore_acquire(void)
+{
+  int i/*, pid */;
+  argint(0, &i);
+  // pid = myproc()->pid;
+  semaphore_acquire(i, myproc());
+  return 0;
+}
+
+int
+sys_semaphore_release(void)
+{
+  int i;
+  argint(0, &i);
+  semaphore_release(i);
+  return 0;
+}

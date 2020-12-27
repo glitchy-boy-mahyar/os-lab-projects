@@ -26,6 +26,9 @@ int uptime(void);
 void reverse_number(int);
 int get_children(int);
 void trace_syscalls(int);
+void semaphore_initialize(int, int, int);
+void semaphore_acquire(int);
+void semaphore_release(int);
 
 // ulib.c
 int stat(const char*, struct stat*);

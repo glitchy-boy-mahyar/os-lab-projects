@@ -106,6 +106,9 @@ extern int sys_uptime(void);
 extern int sys_reverse_number(void);
 extern int sys_get_children(void);
 extern int sys_trace_syscalls(void);
+extern int sys_semaphore_initialize(void);
+extern int sys_semaphore_acquire(void);
+extern int sys_semaphore_release(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -132,6 +135,9 @@ static int (*syscalls[])(void) = {
 [SYS_reverse_number] sys_reverse_number,
 [SYS_get_children] sys_get_children,
 [SYS_trace_syscalls] sys_trace_syscalls,
+[SYS_semaphore_initialize] sys_semaphore_initialize,
+[SYS_semaphore_acquire] sys_semaphore_acquire,
+[SYS_semaphore_release] sys_semaphore_release,
 };
 
 void

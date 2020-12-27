@@ -132,6 +132,9 @@ void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
 void            yield(void);
+void            semaphore_init(int, int, int);
+void            semaphore_acquire(int, struct proc*);
+void            semaphore_release(int);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

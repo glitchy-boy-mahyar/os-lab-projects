@@ -28,5 +28,8 @@
 #define SYS_reverse_number 22
 #define SYS_get_children 23
 #define SYS_trace_syscalls 24
+#define SYS_semaphore_initialize 25
+#define SYS_semaphore_acquire 26
+#define SYS_semaphore_release 27
 
 #endif

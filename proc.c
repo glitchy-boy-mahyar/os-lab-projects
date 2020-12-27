@@ -6,12 +6,29 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include "sleeplock.h"
+
+typedef struct Queue queue;
+
+#define NSEM 5
 
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
   int trace, trace_pid;
 } ptable;
+
+struct Queue {
+  int front, rear, size, cap;
+  struct proc* array[NPROC];
+};
+
+struct Sem {
+  struct spinlock lock;
+  struct sleeplock sl;
+  int count;
+  queue q;
+} semaphore[NSEM];
 
 static struct proc *initproc;
 
@@ -27,6 +44,69 @@ pinit(void)
   initlock(&ptable.lock, "ptable");
   ptable.trace = 0;
   ptable.trace_pid = -1;
+}
+
+void
+qinit(queue* q) {
+  *q = (queue) { .front = 0, .rear = NPROC - 1, .size = 0, .cap = NPROC };
+  for(int i = 0; i < NPROC; ++i){
+    q->array[i] = 0;
+  }
+}
+
+int
+empty(queue* q) {
+  return q->size == 0;
+}
+
+void enqueue(queue* q, struct proc* n)
+{
+  q->rear = (q->rear + 1) % q->cap;
+  q->array[q->rear] = n;
+  q->size += 1;
+}
+
+struct proc*
+dequeue(queue* q) {
+  if (empty(q))
+    return 0;
+  struct proc* res = q->array[q->front];
+  q->front = (q->front + 1) % q->cap;
+  q->size -= 1;
+  return res;
+}
+
+void
+semaphore_init(int i, int v, int m)
+{
+  initlock(&semaphore[i].lock, "semaphore");
+  // initsleeplock(&semaphore[i].sl, "sleeplock");
+  // acquiresleep(&semaphore[i].sl);
+  semaphore[i].count = v - m;
+  qinit(&semaphore[i].q);
+}
+
+void
+semaphore_acquire(int i, struct proc* proc)
+{
+  acquire(&semaphore[i].lock);
+  if(semaphore[i].count == 0){
+    enqueue(&semaphore[i].q, proc);
+    sleep(proc, &semaphore[i].lock);
+  }
+  semaphore[i].count -= 1;
+  release(&semaphore[i].lock);
+}
+
+void
+semaphore_release(int i) {
+  acquire(&semaphore[i].lock);
+  semaphore[i].count += 1;
+  if(!empty(&semaphore[i].q)){
+    struct proc* proc = dequeue(&semaphore[i].q);
+    wakeup(proc);
+  }
+  release(&semaphore[i].lock);
 }
 
 // Must be called with interrupts disabled
