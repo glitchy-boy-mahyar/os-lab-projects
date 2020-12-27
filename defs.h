@@ -142,6 +142,9 @@ void            p_unlock(struct spinlock*);
 
 void            p_wakeup(int cv_ind);
 void            p_sleep1(int cv_ind);
+
+void            pp_lock(int);
+void            pp_unlock(int);
 // swtch.S
 void            swtch(struct context**, struct context*);
 

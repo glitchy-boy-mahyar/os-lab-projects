@@ -12,6 +12,7 @@ typedef struct Queue queue;
 
 #define NSEM 5
 #define NCV 3
+#define NSP 3
 
 struct {
   struct spinlock lock;
@@ -32,6 +33,7 @@ struct Sem {
 } semaphore[NSEM];
 
 condition_var cvtable[NCV];
+struct spinlock sltable[NSP];
 
 static struct proc *initproc;
 
@@ -50,6 +52,10 @@ pinit(void)
 
   for(int i = 0 ; i < NCV ; i++){
     p_init_lock(&cvtable[i].lock);
+  }
+  
+  for(int i = 0; i < NSP; i++){
+    p_init_lock(&sltable[i]);
   }
 }
 
@@ -759,4 +765,16 @@ void
 p_unlock(struct spinlock* lock)
 {
   xchg(&lock->locked, 0);
+}
+
+void
+pp_lock(int i)
+{
+  p_lock(&sltable[i]);  
+}
+
+void
+pp_unlock(int i)
+{
+  p_unlock(&sltable[i]);
 }

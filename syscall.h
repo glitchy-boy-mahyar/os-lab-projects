@@ -1,7 +1,7 @@
 #ifndef __SYS_CALL_H__
 #define __SYS_CALL_H__
 
-#define N_SYSCALL 31
+#define N_SYSCALL 34
 
 // System call numbers
 #define SYS_fork    1
@@ -36,4 +36,7 @@
 #define SYS_p_cv_signal 30
 #define SYS_p_cv_wait 31
 #define SYS_chsv 32
+#define SYS_p_lock 33
+#define SYS_p_unlock 34
+
 #endif

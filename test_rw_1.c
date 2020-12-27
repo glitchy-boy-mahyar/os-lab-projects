@@ -3,37 +3,48 @@
 #include "user.h"
 #include "fcntl.h"
 
-#define RC 0
-#define LOG 1
+#define WC 0
+#define RC 1
+#define LOG 2
 
 #define mutex 0
 #define wrt 1
 
 void rw_write(){
+    p_lock(mutex);
     printf(1 , "Writer waits for wrt...\n");
-    p_cv_wait(wrt);
+    while(chsv(WC, 0) || chsv(RC, 0))
+        p_cv_wait(wrt);
+    chsv(WC, 1);
+    p_unlock(mutex);
 
+    // Writing here...
     int log_val = chsv(LOG , 1);
     printf(1 , "log_val %d\n" , log_val);
+    // Writing done (supposedly)
 
+    p_lock(mutex);
+    chsv(WC, -1);
     p_cv_signal(wrt);
+    p_unlock(mutex);
 }
 
 void rw_read(){
-    p_cv_wait(mutex);
-    int read_count = chsv(RC , 1);
-    if(read_count == 1)
+    p_lock(mutex);
+    while(chsv(WC, 0))
         p_cv_wait(wrt);
-    p_cv_signal(mutex);
+    chsv(RC , 1);
+    p_unlock(mutex);
 
+    // Reading here...
     int log = chsv(LOG , 0);
     printf(1 , "LOG = %d / reader = %d" , log , getpid());
+    // Reading done (arvah ammash)
 
-    p_cv_wait(mutex);
-    read_count = chsv(RC , -1);
-    if(read_count == 0)
-        p_cv_signal(wrt);
-    p_cv_signal(mutex);
+    p_lock(mutex);
+    chsv(RC , -1);
+    p_cv_signal(wrt);
+    p_unlock(mutex);
 }
 
 int main() {
@@ -48,4 +59,5 @@ int main() {
         //sleep(5);
         rw_read();
     // }
+    exit();
 }

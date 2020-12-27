@@ -7,8 +7,8 @@
 #include "mmu.h"
 #include "proc.h"
 
-#define NSV 2
-int sv_array[NSV] = {0};
+#define NSV 5
+int sv_array[NSV] = {0, 0, 0, 0, 0};
 
 int
 sys_fork(void)
@@ -210,4 +210,22 @@ sys_chsv(void)
 
   sv_array[sv_index] += sv_change_val;
   return sv_array[sv_index];
+}
+
+int
+sys_p_lock(void)
+{
+  int ind;
+  argint(0, &ind);
+  pp_lock(ind);
+  return 0;
+}
+
+int
+sys_p_unlock(void)
+{
+  int ind;
+  argint(0, &ind);
+  pp_unlock(ind);
+  return 0;
 }

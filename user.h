@@ -36,6 +36,8 @@ int cv_signal(condition_var*);
 int p_cv_wait(int);
 int p_cv_signal(int);
 int chsv(int, int);
+void p_lock(int);
+void p_unlock(int);
 
 // ulib.c
 int stat(const char*, struct stat*);
