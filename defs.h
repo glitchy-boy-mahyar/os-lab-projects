@@ -135,6 +135,7 @@ void            yield(void);
 void            semaphore_init(int, int, int);
 void            semaphore_acquire(int, struct proc*);
 void            semaphore_release(int);
+void            sleep1(void*, struct spinlock*);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

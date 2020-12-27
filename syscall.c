@@ -109,6 +109,8 @@ extern int sys_trace_syscalls(void);
 extern int sys_semaphore_initialize(void);
 extern int sys_semaphore_acquire(void);
 extern int sys_semaphore_release(void);
+extern int sys_cv_wait(void);
+extern int sys_cv_signal(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -138,6 +140,8 @@ static int (*syscalls[])(void) = {
 [SYS_semaphore_initialize] sys_semaphore_initialize,
 [SYS_semaphore_acquire] sys_semaphore_acquire,
 [SYS_semaphore_release] sys_semaphore_release,
+[SYS_cv_wait] sys_cv_wait,
+[SYS_cv_signal] sys_cv_signal,
 };
 
 void

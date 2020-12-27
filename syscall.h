@@ -1,7 +1,7 @@
 #ifndef __SYS_CALL_H__
 #define __SYS_CALL_H__
 
-#define N_SYSCALL 24
+#define N_SYSCALL 29
 
 // System call numbers
 #define SYS_fork    1
@@ -31,5 +31,7 @@
 #define SYS_semaphore_initialize 25
 #define SYS_semaphore_acquire 26
 #define SYS_semaphore_release 27
+#define SYS_cv_signal 28
+#define SYS_cv_wait 29
 
 #endif

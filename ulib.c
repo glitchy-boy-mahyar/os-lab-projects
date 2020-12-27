@@ -3,6 +3,7 @@
 #include "fcntl.h"
 #include "user.h"
 #include "x86.h"
+#include "spinlock.h"
 
 char*
 strcpy(char *s, const char *t)
@@ -103,4 +104,22 @@ memmove(void *vdst, const void *vsrc, int n)
   while(n-- > 0)
     *dst++ = *src++;
   return vdst;
+}
+
+void
+init_lock(struct spinlock* lock)
+{
+  lock->locked = 0;
+}
+
+void
+lock(struct spinlock* lock)
+{
+  while(xchg(&lock->locked, 1) != 0) {}
+}
+
+void
+unlock(struct spinlock* lock)
+{
+  xchg(&lock->locked, 0);
 }

@@ -87,27 +87,32 @@ semaphore_init(int i, int v, int m)
 void
 semaphore_acquire(int i, struct proc* proc)
 {
-  // acquire(&semaphore[i].lock);
   cli();
+  // acquire(&semaphore[i].lock);
+
   if(semaphore[i].count == 0){
     enqueue(&semaphore[i].q, proc);
     // sleep(proc, &semaphore[i].lock);
     acquiresleep(&proc->slock);
   }
   semaphore[i].count -= 1;
-  sti();
+
   // release(&semaphore[i].lock);
+  sti();
 }
 
 void
 semaphore_release(int i) {
-  // acquire(&semaphore[i].lock);
   cli();
+  // acquire(&semaphore[i].lock);
+
   semaphore[i].count += 1;
   if(!empty(&semaphore[i].q)){
     struct proc* proc = dequeue(&semaphore[i].q);
+    // wakeup(proc);
     releasesleep(&proc->slock);
   }
+
   // release(&semaphore[i].lock);
   sti();
 }
@@ -566,6 +571,34 @@ forkret(void)
   }
 
   // Return to "caller", actually trapret (see allocproc).
+}
+
+// Customized sleep function for condition_var
+void
+sleep1(void* chan, struct spinlock* lk)
+{
+  struct proc *p = myproc();
+  
+  if(p == 0)
+    panic("sleep");
+
+  if(lk == 0)
+    panic("sleep without lk");
+
+  acquire(&ptable.lock);
+  lk->locked = 0;
+
+  // Go to sleep.
+  p->chan = chan;
+  p->state = SLEEPING;
+
+  sched();
+
+  // Tidy up.
+  p->chan = 0;
+
+  release(&ptable.lock);
+  while(xchg(&lk->locked, 1) != 0) {}
 }
 
 // Atomically release lock and sleep on chan.

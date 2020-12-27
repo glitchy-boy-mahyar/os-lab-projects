@@ -154,3 +154,27 @@ sys_semaphore_release(void)
   semaphore_release(i);
   return 0;
 }
+
+int
+sys_cv_wait(void)
+{
+  int cv_cast;
+  argint(0, &cv_cast);
+
+  condition_var* cv = (condition_var*)(cv_cast);
+  
+  sleep1(cv, &cv->lock);
+  return 0;
+}
+
+int
+sys_cv_signal(void)
+{
+  int cv_cast;
+  argint(0, &cv_cast);
+
+  condition_var* cv = (condition_var*)(cv_cast);
+  
+  wakeup(cv);
+  return 0;
+}

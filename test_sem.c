@@ -35,4 +35,15 @@ int main() {
     // semaphore_acquire(0);
     printf(1, "sounds good so far for me (%d)\n", getpid());
     exit();
+    
+    // int x = 0;
+    // struct spinlock lk;
+    // init_lock(&lk);
+    // lock(&lk);
+
+    // x = 2;
+    // printf(1, "x is now %d\n", x);
+
+    // unlock(&lk);
+    // exit();
 }

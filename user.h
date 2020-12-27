@@ -1,3 +1,5 @@
+#include "spinlock.h"
+
 struct stat;
 struct rtcdate;
 
@@ -29,6 +31,8 @@ void trace_syscalls(int);
 void semaphore_initialize(int, int, int);
 void semaphore_acquire(int);
 void semaphore_release(int);
+int cv_wait(condition_var*);
+int cv_signal(condition_var*);
 
 // ulib.c
 int stat(const char*, struct stat*);
@@ -43,3 +47,7 @@ void* memset(void*, int, uint);
 void* malloc(uint);
 void free(void*);
 int atoi(const char*);
+
+void init_lock(struct spinlock*);
+void lock(struct spinlock*);
+void unlock(struct spinlock*);
