@@ -32,7 +32,7 @@ int main() {
             printf(1 , "Parent waiting!\n");
             for(int i = 0 ; i < 2 ; i++)
                 wait();
-            printf(1 , "Comlpleted be eshghe agha Henrick\n");
+            printf(1 , "Completed be eshghe agha\n");
         }
     }
     exit();
